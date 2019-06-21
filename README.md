@@ -10,4 +10,4 @@ $ make
 $ ./aze
 ```
 
-* pres ```q``` to quit
+* press ```q``` to quit
