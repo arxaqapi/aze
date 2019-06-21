@@ -1,19 +1,36 @@
+/* includes */
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 
+/* data */
 struct termios original_termios;
+
+/* terminal */
+
+void die(const char *s)
+{
+    perror(s);
+    exit(1);
+}
 
 void disableRawMode(void)
 {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios) == -1)
+    {
+        die("tcsetattr");
+    }
 }
 
 void enableRawMode(void)
 {
-    tcgetattr(STDIN_FILENO, &original_termios);
+    if (tcgetattr(STDIN_FILENO, &original_termios) == -1)
+    {
+        die("tcgetattr");
+    }
     atexit(disableRawMode);
 
     struct termios raw = original_termios;
@@ -31,8 +48,13 @@ void enableRawMode(void)
     raw.c_cc[VTIME] = 1;
     // max amount of time before read() returns
 
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
+    {
+        die("tcseattr");
+    }
 }
+
+/* init */
 int main(void)
 {
     enableRawMode();
@@ -40,7 +62,10 @@ int main(void)
     while (1)
     {
         char c = '\0';
-        read(STDIN_FILENO, &c ,1);
+        if (read(STDIN_FILENO, &c ,1) == -1 && errno != EAGAIN)
+        {
+            die("read");
+        }
         if (iscntrl(c))
         {
             printf("%d\r\n", c);
