@@ -17,6 +17,8 @@ void enableRawMode(void)
     atexit(disableRawMode);
 
     struct termios raw = original_termios;
+    raw.c_iflag &= ~(IXON);
+    // XOFF XON, control characters, input flag
     raw.c_lflag &= ~(ECHO | ICANON | ISIG);
     // disable echo with bitwise operations
     // and turn off canonical mode
