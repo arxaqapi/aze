@@ -10,7 +10,4 @@ $ make
 $ ./aze
 ```
 
-* to tell read() that the end of the file is reached.
-```
-Ctrl-D
-```
+* pres ```q``` to quit
