@@ -12,10 +12,19 @@
 /* data */
 struct termios original_termios;
 
+/* To avoid implicit declaration*/
+void clearOnExit(void)
+{
+    write(STDIN_FILENO, "\x1b[2J", 4);
+    write(STDIN_FILENO, "\x1b[H", 3);
+}
+
 /* terminal */
 
 void die(const char *s)
 {
+    clearOnExit();
+
     perror(s);
     exit(1);
 }
@@ -57,6 +66,42 @@ void enableRawMode(void)
     }
 }
 
+char editorReadKey(void)
+{ // wait for one keypress and return it
+    int nread;
+    char c;
+    while ((nread = read(STDIN_FILENO, &c, 1)) != 1)
+    {
+        if (nread == -1 && errno != EAGAIN) die("read");
+    }
+    return c;
+}
+
+void editorRefreshScreen(void)
+{
+    write(STDIN_FILENO, "\x1b[2J", 4);
+    // Escape sequences instruct terminal text formatting tasks, such as coloring text...
+    // https://vt100.net/docs/vt100-ug/chapter3.html#ED
+    write(STDIN_FILENO, "\x1b[H", 3);
+}
+
+// clearOnExit
+
+/* input */
+
+// higher level
+void editorProcessKeypress()
+{ // wait for keypress and handles it
+    char c = editorReadKey();
+    switch (c)
+    {
+    case CTRL_KEY('q'):
+    clearOnExit();
+        exit(0);
+        break;
+    }
+}
+
 /* init */
 int main(void)
 {
@@ -64,19 +109,8 @@ int main(void)
 
     while (1)
     {
-        char c = '\0';
-        if (read(STDIN_FILENO, &c ,1) == -1 && errno != EAGAIN)
-        {
-            die("read");
-        }
-        if (iscntrl(c))
-        {
-            printf("%d\r\n", c);
-        } else 
-        {
-            printf("%d ('%c')\r\n", c, c);
-        }
-        if (c == CTRL_KEY('q')) break;
+        editorRefreshScreen();
+        editorProcessKeypress();
     }
     
     return 0;
