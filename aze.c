@@ -6,20 +6,30 @@
 #include <termios.h>
 #include <unistd.h>
 
-/* defines */
+/*** defines */
 #define CTRL_KEY(k) ((k) & 0x1f)
 
-/* data */
+/*** data */
 struct termios original_termios;
 
-/* To avoid implicit declaration*/
+/*** To avoid implicit declaration*/
 void clearOnExit(void)
 {
     write(STDIN_FILENO, "\x1b[2J", 4);
     write(STDIN_FILENO, "\x1b[H", 3);
 }
+/*** Output */
 
-/* terminal */
+void editorDrawRows(void)
+{
+    // missing terminal size
+    for (int y = 0; y < 10; y++)
+    {
+        write(STDIN_FILENO, "~\r\n", 3);
+    }
+    
+}
+/*** terminal */
 
 void die(const char *s)
 {
@@ -83,11 +93,15 @@ void editorRefreshScreen(void)
     // Escape sequences instruct terminal text formatting tasks, such as coloring text...
     // https://vt100.net/docs/vt100-ug/chapter3.html#ED
     write(STDIN_FILENO, "\x1b[H", 3);
+
+    editorDrawRows();
+
+    write(STDIN_FILENO, "\x1b[H", 3);
 }
 
 // clearOnExit
 
-/* input */
+/*** input */
 
 // higher level
 void editorProcessKeypress()
@@ -102,7 +116,8 @@ void editorProcessKeypress()
     }
 }
 
-/* init */
+
+/*** init */
 int main(void)
 {
     enableRawMode();
